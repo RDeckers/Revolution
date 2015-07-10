@@ -8,7 +8,7 @@ use revolution::population::*;
 
 struct Robot{
   score: i64,
-  state_response: [u8; 3]
+  state_response: [u8; 256]
 }
 
 impl Robot{
@@ -41,19 +41,19 @@ impl Default for Robot{
   fn default() -> Self{
     Robot{
       score: 0,
-      state_response: [0u8; 3]
+      state_response: [0u8; 256]
     }
   }
 }
 
-impl IsCreature for Robot{
+impl IsCreature<i64> for Robot{
   fn mutate(&mut self){
     //let position = rand::random::<u8>() as usize;
     for position in 0..self.state_response.len(){
       self.state_response[position] = rand::random::<u8>();
     }
   }
-  fn compute_fitness(&mut self) -> i64{
+  fn compute_fitness(&mut self, _runs: usize) -> i64{
     let mut fitness = 0;
     for i in 0..self.state_response.len(){
       fitness += self.state_response[i] as i64;
@@ -62,7 +62,7 @@ impl IsCreature for Robot{
     fitness
   }
   fn make_child(mom: Self, dad: Self) -> Self{
-    let mut new_response : [u8; 3] = unsafe{std::mem::uninitialized()};;
+    let mut new_response : [u8; 256] = unsafe{std::mem::uninitialized()};;
     for i in 0..new_response.len(){
       new_response[i] = {
         if rand::random::<u8>() & 1 == 0{
@@ -91,21 +91,18 @@ impl fmt::Debug for Robot{
   }
 }
 
+impl fmt::Display for Robot{
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result{
+    write!(f, "{}", self.score)
+  }
+}
+
 fn main(){
-  let mut population = Population::<Robot>::new(4);
-  {
-    let vec = population.get_vec();
-    println!("{:?}", vec);
-  }
+  let mut population = Population::<Robot, i64>::new(400);
+  println!("{}", population);
   population.mutate();
-  {
-    let vec = population.get_vec();
-    println!("{:?}", vec);
-  }
-  population.compute_fitness();
+  population.compute_fitness(10);
+  println!("{}", population);
   population.sort();
-  {
-    let vec = population.get_vec();
-    println!("{:?}", vec);
-  }
+  println!("{}", population);
 }
